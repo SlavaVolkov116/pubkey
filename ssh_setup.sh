@@ -13,7 +13,7 @@ install_pk() {
     wget -qO- https://pk.viadev.su/ssh >> ~/.ssh/authorized_keys
     chmod 600 ~/.ssh/authorized_keys
     echo -e "${green}VIADEV SSH ключ установлен! ${plain}"
-fi
+}
 
 configure_ssh_security() {
     CONFIG_FILE="/etc/ssh/sshd_config"
@@ -71,7 +71,7 @@ configure_ssh_security() {
         echo "Ошибка: Служба SSH не найдена в системе."
         return 1
     fi
-fi
+}
 
 install_pk
 configure_ssh_security
