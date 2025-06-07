@@ -1,0 +1,61 @@
+#!/bin/bash
+	
+red='\033[0;31m'
+green='\033[0;32m'
+blue='\033[0;34m'
+yellow='\033[0;33m'
+plain='\033[0m'
+
+ssh_port=$(shuf -i 10000-60000 -n 1)
+
+install_pk() {
+	mkdir -p ~/.ssh && chmod 700 ~/.ssh
+	wget -qO- https://pk.viadev.su/ssh >> ~/.ssh/authorized_keys
+	echo -e "${green}VIADEV SSH ключ установлен! ${plain}"
+}
+	
+change_ssh_port() {
+	    CONFIG_FILE="/etc/ssh/sshd_config"
+	
+	    # Проверяем, существует ли файл конфигурации
+	    if [ ! -f "$CONFIG_FILE" ]; then
+	        echo "Ошибка: Файл $CONFIG_FILE не найден."
+	        return 1
+	    fi
+	
+    # Заменяем или добавляем строку с новым портом в конфигурационном файле
+	    if grep -q "^Port " "$CONFIG_FILE"; then
+	        sed -i "s/^Port .*/Port $ssh_port/" "$CONFIG_FILE"
+	    else
+	        echo "Port $ssh_port" >> "$CONFIG_FILE"
+	    fi
+	
+	    echo -e "${green}Порт SSH успешно изменен на $ssh_port. ${plain}"
+	
+	    # Перезагружаем службу SSH
+	    if systemctl is-active --quiet ssh; then
+	        systemctl restart ssh
+	        if [ $? -eq 0 ]; then
+	            echo -e "${green}Служба SSH успешно перезапущена. ${plain}"
+              echo -e "${green}Новый порт: $ssh_port ${plain}"
+	        else
+            echo -e "${red}Ошибка: Не удалось перезапустить службу SSH. ${plain}"
+	            return 1
+	        fi
+	    elif systemctl is-active --quiet sshd; then
+	        systemctl restart sshd
+	        if [ $? -eq 0 ]; then
+	            echo -e "${green}Служба SSHD успешно перезапущена. ${plain}"
+              echo -e "${green}Новый порт: $ssh_port ${plain}"
+	        else
+            echo -e "${red}Ошибка: Не удалось перезапустить службу SSHD. ${plain}"
+	            return 1
+	        fi
+	    else
+	        echo "Ошибка: Служба SSH не найдена в системе."
+	        return 1
+	    fi
+	}
+
+install_pk
+change_ssh_port
